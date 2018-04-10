@@ -36,9 +36,9 @@ public class MainHW2 {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		Instances trainingCancer = loadData("cancer_train.txt");
-		Instances testingCancer = loadData("cancer_test.txt");
-		Instances validationCancer = loadData("cancer_validation.txt");
+		Instances trainingCancer = loadData("HomeWork2/Data/cancer_train.txt");
+		Instances testingCancer = loadData("HomeWork2/Data/cancer_test.txt");
+		Instances validationCancer = loadData("HomeWork2/Data/cancer_validation.txt");
 		
         //TODO: complete the Main method
 	}
