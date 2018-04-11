@@ -26,9 +26,6 @@ public class DecisionTree implements Classifier {
 	public void buildClassifier(Instances data) throws Exception {
 		rootNode = new Node();
 		selectionMethod = SelectionMethod.GINI;
-		for(int i = 0; i< data.classIndex();i++){
-			System.out.println(calcMeasureAttribute(data,data.attribute(i)));
-		}
     }
     
     @Override
@@ -37,8 +34,8 @@ public class DecisionTree implements Classifier {
     }
 
 
-    private double calcGain(Instances data, int attributeIndex) {
-		return 0;
+    private double calcGain(Instances data, int attributeIndex) throws Exception {
+		return calcMeasure(data) - calcMeasureAttribute(data, data.attribute(attributeIndex));
 	}
 
 	/**
@@ -68,6 +65,14 @@ public class DecisionTree implements Classifier {
 		}
 
 		return sum;
+	}
+
+	private double calcMeasure(Instances data) throws Exception {
+		if (selectionMethod == SelectionMethod.ENTROPY) {
+			return calcEntropy(getProbabilties(data));
+		} else {
+			return calcGini(getProbabilties(data));
+		}
 	}
 
 	private double calcMeasureAttribute(Instances data, Attribute attribute) throws Exception {
