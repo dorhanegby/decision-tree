@@ -25,7 +25,10 @@ public class DecisionTree implements Classifier {
 	@Override
 	public void buildClassifier(Instances data) throws Exception {
 		rootNode = new Node();
-		selectionMethod = SelectionMethod.ENTROPY;
+		selectionMethod = SelectionMethod.GINI;
+		for(int i = 0; i< data.classIndex();i++){
+			System.out.println(calcMeasureAttribute(data,data.attribute(i)));
+		}
     }
     
     @Override
@@ -38,8 +41,6 @@ public class DecisionTree implements Classifier {
 		return 0;
 	}
 
-
-    // TODO: Ben
 	/**
 	 * Calculate Gini Index
 	 * @param p - A set of probabilities
@@ -47,10 +48,10 @@ public class DecisionTree implements Classifier {
 	 */
     private double calcGini(double[] p) {
 		double sum = 0.0;
-		for(int i = 0 ; i < p.length;i++){
-			sum += p[i]*p[i];
+		for (int i = 0; i < p.length; i++) {
+			sum += p[i] * p[i];
 		}
-		return sum;
+		return 1 - sum;
 	}
 
 	/**
@@ -60,13 +61,13 @@ public class DecisionTree implements Classifier {
 	 */
 	private double calcEntropy(double[] p) {
 		double sum = 0.0;
-		for(int i=0;i<p.length;i++) {
-		    if(p[i] != 0) {
-                sum += p[i] * Math.log(p[i]);
-            }
+		for (int i = 0; i < p.length; i++) {
+			if (p[i] != 0) {
+				sum += p[i] * Math.log(p[i]);
+			}
 		}
 
-		return 1- sum;
+		return sum;
 	}
 
 	private double calcMeasureAttribute(Instances data, Attribute attribute) throws Exception {
