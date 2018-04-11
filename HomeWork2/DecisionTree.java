@@ -26,10 +26,21 @@ public class DecisionTree implements Classifier {
 	public void buildClassifier(Instances data) throws Exception {
 		rootNode = new Node();
 		selectionMethod = SelectionMethod.GINI;
-		for(int i = 0; i< data.classIndex();i++){
-			System.out.println(calcMeasureAttribute(data,data.attribute(i)));
-		}
+		//System.out.println(returnValue(getProbabilties(data)));
     }
+    public SelectionMethod returnValue (double[] p)
+
+	{
+		double max = p[0];
+		int maxIndex = 0;
+		for (int i = 0; i < p.length; i++) {
+			if (p[i] < max) {
+				max = p[i];
+				maxIndex = i;
+			}
+		}
+		return SelectionMethod.values()[maxIndex];
+	}
     
     @Override
 	public double classifyInstance(Instance instance) {
@@ -78,13 +89,13 @@ public class DecisionTree implements Classifier {
 		for(int i=0;i<attributeDiscreteValues;i++) {
 			Instances filteredData = filterByAttributeValue(data, attribute, new int[] {(i + 1)});
 			if(filteredData.size() != 0) {
-                sum += (filteredData.size() / (double) data.size());
+                double weight = (filteredData.size() / (double) data.size());
                 if(selectionMethod == SelectionMethod.ENTROPY) {
-                	sum *= calcEntropy(getProbabilties(filteredData));
+                	sum += weight * calcEntropy(getProbabilties(filteredData));
 				}
 				else
 				{
-					sum *= calcGini(getProbabilties(filteredData));
+					sum += weight * calcGini(getProbabilties(filteredData));
 				}
             }
 		}
