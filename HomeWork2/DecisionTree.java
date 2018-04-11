@@ -26,9 +26,6 @@ public class DecisionTree implements Classifier {
 	public void buildClassifier(Instances data) throws Exception {
 		rootNode = new Node();
 		selectionMethod = SelectionMethod.ENTROPY;
-		for(int i =0;i<data.classIndex();i++) {
-            System.out.println(calcEntropyAttribute(data, data.attribute(i)));
-        }
     }
     
     @Override
@@ -72,7 +69,7 @@ public class DecisionTree implements Classifier {
 		return 1- sum;
 	}
 
-	private double calcEntropyAttribute(Instances data, Attribute attribute) throws Exception {
+	private double calcMeasureAttribute(Instances data, Attribute attribute) throws Exception {
 		double sum = 0.0;
 
 		int attributeDiscreteValues = attribute.numValues();
@@ -80,7 +77,14 @@ public class DecisionTree implements Classifier {
 		for(int i=0;i<attributeDiscreteValues;i++) {
 			Instances filteredData = filterByAttributeValue(data, attribute, new int[] {(i + 1)});
 			if(filteredData.size() != 0) {
-                sum += (filteredData.size() / (double) data.size()) * calcEntropy(getProbabilties(filteredData));
+                sum += (filteredData.size() / (double) data.size());
+                if(selectionMethod == SelectionMethod.ENTROPY) {
+                	sum *= calcEntropy(getProbabilties(filteredData));
+				}
+				else
+				{
+					sum *= calcGini(getProbabilties(filteredData));
+				}
             }
 		}
 
