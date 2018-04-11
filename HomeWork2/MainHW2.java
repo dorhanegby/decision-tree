@@ -39,7 +39,10 @@ public class MainHW2 {
 		Instances trainingCancer = loadData("HomeWork2/Data/cancer_train.txt");
 		Instances testingCancer = loadData("HomeWork2/Data/cancer_test.txt");
 		Instances validationCancer = loadData("HomeWork2/Data/cancer_validation.txt");
-		
+
+		DecisionTree decisionTree = new DecisionTree();
+		decisionTree.buildClassifier(trainingCancer);
+
         //TODO: complete the Main method
 	}
 }
