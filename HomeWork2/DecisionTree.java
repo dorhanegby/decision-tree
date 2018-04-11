@@ -3,6 +3,7 @@ package HomeWork2;
 import weka.classifiers.Classifier;
 import weka.core.*;
 import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.instance.RemoveWithValues;
 import weka.filters.unsupervised.instance.SubsetByExpression;
 
@@ -24,9 +25,55 @@ public class DecisionTree implements Classifier {
 
 	@Override
 	public void buildClassifier(Instances data) throws Exception {
-		rootNode = new Node();
 		selectionMethod = SelectionMethod.GINI;
     }
+
+    private Node buildTree(Instances data) throws Exception {
+		Node node = new Node();
+		// TODO: Need to make a stopping condition if all the data is of one class (recurrence, no_recurrence) @ Ben
+		if(data.numAttributes() == 0) {
+			// TODO: Mark node returnValue as the majority class
+			return node;
+		}
+
+		// TODO: implemented Find best attribute @ Dor
+		Attribute splittingAttribute = findSplittingCriterion(data);
+		node.attributeIndex = splittingAttribute.index();
+		Instances newData = removeAttribute(data, splittingAttribute);
+
+		Instances recurrenceClass = getRecurrenceClass(data);
+		Instances noRecurrenceClass = getNoRecurrenceClass(data);
+
+		if(recurrenceClass.size() == 0 && noRecurrenceClass.size() != 0) {
+			node.returnValue = 0;
+			return node;
+		}
+		else if (recurrenceClass.size() != 0 && noRecurrenceClass.size() == 0) {
+			node.returnValue = 1;
+			return node;
+		}
+
+		// TODO: Recursion
+		node.children = new Node[2];
+		node.children[NO_RECURRENCE] = buildTree(noRecurrenceClass);
+		node.children[RECURRENCE] = buildTree(recurrenceClass);
+
+	}
+	// Not tested yet
+	private Instances removeAttribute(Instances data, Attribute attribute) throws Exception {
+		Remove remove = new Remove();
+
+		remove.setAttributeIndices("" + attribute.index());
+		remove.setInvertSelection(false);
+		remove.setInputFormat(data);
+		Instances newData = Filter.useFilter(data, remove);
+
+		return newData;
+	}
+
+	private Attribute findSplittingCriterion(Instances data) {
+
+	}
     
     @Override
 	public double classifyInstance(Instance instance) {
@@ -97,10 +144,18 @@ public class DecisionTree implements Classifier {
 		return sum;
 	}
 
+	private Instances getNoRecurrenceClass(Instances data) throws Exception {
+		return filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( NO_RECURRENCE + 1 )});
+	}
+
+	private Instances getRecurrenceClass(Instances data) throws Exception {
+		return filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( RECURRENCE + 1 )});
+	}
+
 	private double[] getProbabilties(Instances data) throws Exception{
 		double[] probabilities = new double[2];
-		probabilities[NO_RECURRENCE] = filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( NO_RECURRENCE + 1 )}).size() / (double) data.size();
-		probabilities[RECURRENCE] = filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( RECURRENCE + 1 )}).size() / (double) data.size();
+		probabilities[NO_RECURRENCE] = getNoRecurrenceClass(data).size() / (double) data.size();
+		probabilities[RECURRENCE] = getRecurrenceClass(data).size() / (double) data.size();
         return probabilities;
 	}
 
@@ -135,10 +190,6 @@ public class DecisionTree implements Classifier {
 		return newData;
 	}
 
-	private boolean isRecurrence(String actual) {
-		return actual == "recurrence-events";
-	}
-    
     @Override
 	public double[] distributionForInstance(Instance arg0) throws Exception {
 		// Don't change
