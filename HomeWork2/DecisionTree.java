@@ -35,7 +35,9 @@ public class DecisionTree implements Classifier {
 
     private Node buildTree(Instances data) throws Exception {
 		Node node = new Node();
-		// TODO: Need to make a stopping condition if all the data is of one class (recurrence, no_recurrence) @ Ben
+		if(isTheSameClass(data)){
+			node.returnValue = majorityClass(data);
+		}
 		if(data.numAttributes() == 0) {
 			// TODO: Mark node returnValue as the majority class
 			return node;
@@ -62,6 +64,14 @@ public class DecisionTree implements Classifier {
 		node.children = new Node[2];
 		node.children[NO_RECURRENCE] = buildTree(noRecurrenceClass);
 		node.children[RECURRENCE] = buildTree(recurrenceClass);
+	}
+	private boolean isTheSameClass(Instances data) throws Exception {
+		double[] p = getProbabilties(data);
+		boolean isHomogeneous = false;
+		if (p[0] == 1 || p[1] == 1) {
+			isHomogeneous = true;
+		}
+		return isHomogeneous;
 	}
 	// Not tested yet
 	private Instances removeAttribute(Instances data, Attribute attribute) throws Exception {
