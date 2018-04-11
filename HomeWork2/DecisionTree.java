@@ -28,18 +28,10 @@ public class DecisionTree implements Classifier {
 		selectionMethod = SelectionMethod.GINI;
 		//System.out.println(returnValue(getProbabilties(data)));
     }
-    public SelectionMethod returnValue (double[] p)
-
+    public int majorityClass (Instances data) throws Exception
 	{
-		double max = p[0];
-		int maxIndex = 0;
-		for (int i = 0; i < p.length; i++) {
-			if (p[i] < max) {
-				max = p[i];
-				maxIndex = i;
-			}
-		}
-		return SelectionMethod.values()[maxIndex];
+		double [] p = getProbabilties(data);
+		return (p[0] > p[1]) ? NO_RECURRENCE : RECURRENCE;
 	}
     
     @Override
