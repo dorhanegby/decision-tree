@@ -17,6 +17,8 @@ class Node {
 }
 
 public class DecisionTree implements Classifier {
+    private final int NO_RECURRENCE = 0;
+    private final int RECURRENCE = 1;
 	private Node rootNode;
 	private SelectionMethod selectionMethod;
 
@@ -24,7 +26,10 @@ public class DecisionTree implements Classifier {
 	public void buildClassifier(Instances data) throws Exception {
 		rootNode = new Node();
 		selectionMethod = SelectionMethod.ENTROPY;
-	}
+		for(int i =0;i<data.classIndex();i++) {
+            System.out.println(calcEntropyAttribute(data, data.attribute(i)));
+        }
+    }
     
     @Override
 	public double classifyInstance(Instance instance) {
@@ -55,7 +60,9 @@ public class DecisionTree implements Classifier {
 	private double calcEntropy(double[] p) {
 		double sum = 0.0;
 		for(int i=0;i<p.length;i++) {
-			sum += p[i] * Math.log(p[i]);
+		    if(p[i] != 0) {
+                sum += p[i] * Math.log(p[i]);
+            }
 		}
 
 		return -sum;
@@ -68,7 +75,9 @@ public class DecisionTree implements Classifier {
 
 		for(int i=0;i<attributeDiscreteValues;i++) {
 			Instances filteredData = filterByAttributeValue(data, attribute, new int[] {(i + 1)});
-			sum += (filteredData.size() / (double) data.size()) *  calcEntropy(getProbabilties(filteredData));
+			if(filteredData.size() != 0) {
+                sum += (filteredData.size() / (double) data.size()) * calcEntropy(getProbabilties(filteredData));
+            }
 		}
 
 		return sum;
@@ -76,9 +85,9 @@ public class DecisionTree implements Classifier {
 
 	private double[] getProbabilties(Instances data) throws Exception{
 		double[] probabilities = new double[2];
-		probabilities[0] = filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( 1 )}).size() / (double) data.size();
-		probabilities[1] = filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( 2 )}).size() / (double) data.size();
-		return probabilities;
+		probabilities[NO_RECURRENCE] = filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( NO_RECURRENCE + 1 )}).size() / (double) data.size();
+		probabilities[RECURRENCE] = filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( RECURRENCE + 1 )}).size() / (double) data.size();
+        return probabilities;
 	}
 
 	// Not test, should be fine
@@ -98,9 +107,9 @@ public class DecisionTree implements Classifier {
 	}
 
 	private Instances filterByAttributeValue(Instances dataToFilter, Attribute attribute, int[] valueIndecies) throws Exception {
-		RemoveWithValues filter = new RemoveWithValues();
-		String[] options = new String[5];
-		options[0] = "-C";   // attribute index
+        RemoveWithValues filter = new RemoveWithValues();
+        String[] options = new String[5];
+        options[0] = "-C";   // attribute index
 		options[1] = "" + (attribute.index() + 1);
 		options[2] = "-L" ;
 		options[3] = flatArrayValues(valueIndecies);
@@ -132,6 +141,7 @@ public class DecisionTree implements Classifier {
 		GINI,
 		ENTROPY
 	}
+
 
 
 
