@@ -46,7 +46,11 @@ public class DecisionTree implements Classifier {
 	 * @return The gini index of p
 	 */
     private double calcGini(double[] p) {
-		return 0.0;
+		double sum = 0.0;
+		for(int i = 0 ; i < p.length;i++){
+			sum += p[i]*p[i];
+		}
+		return sum;
 	}
 
 	/**
@@ -62,7 +66,7 @@ public class DecisionTree implements Classifier {
             }
 		}
 
-		return -sum;
+		return 1- sum;
 	}
 
 	private double calcMeasureAttribute(Instances data, Attribute attribute) throws Exception {
