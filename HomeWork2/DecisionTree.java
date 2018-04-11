@@ -14,7 +14,9 @@ class Node {
 	Node parent;
 	int attributeIndex; // splitting criterion
 	double returnValue; // majority
-
+	int recurrence;
+	int noRecurrence;
+	Instances data;
 }
 
 public class DecisionTree implements Classifier {
@@ -26,8 +28,8 @@ public class DecisionTree implements Classifier {
 	@Override
 	public void buildClassifier(Instances data) throws Exception {
 		selectionMethod = SelectionMethod.GINI;
-		buildTree(data);
-    }
+		Node rootNode = buildTree(data);
+	}
     public int majorityClass (Instances data) throws Exception
 	{
 		double [] p = getProbabilties(data);
@@ -36,20 +38,35 @@ public class DecisionTree implements Classifier {
 
     private Node buildTree(Instances data) throws Exception {
 		Node node = new Node();
+		node.recurrence = getRecurrenceClass(data).size();
+		node.noRecurrence = getNoRecurrenceClass(data).size();
+		node.data = data;
 		if(isTheSameClass(data)){
 			node.returnValue = majorityClass(data);
+			return node;
 		}
 		if(data.numAttributes() == 0) {
-			// TODO: Mark node returnValue as the majority class
+			node.returnValue = majorityClass(data);
 			return node;
 		}
 
-		// TODO: implemented Find best attribute @ Dor
 		Attribute splittingAttribute = findSplittingCriterion(data);
 		node.attributeIndex = splittingAttribute.index();
-
+		node.returnValue = majorityClass(data);
 		Instances[] splitGroups = splitByCriterion(data, splittingAttribute);
-
+		node.children = new Node[splitGroups.length];
+		for(int i=0;i<splitGroups.length;i++) {
+			if(splitGroups[i].size() != 0) {
+				node.children[i] = buildTree(splitGroups[i]);
+				node.children[i].parent = node;
+			}
+			else {
+				Node childnode = new Node();
+				node.children[i] = childnode;
+				childnode.parent = node;
+				childnode.returnValue = node.returnValue;
+			}
+		}
 		Instances newData = removeAttribute(data, splittingAttribute);
 
 		return node;
@@ -60,6 +77,7 @@ public class DecisionTree implements Classifier {
 		Instances [] instances = new Instances[criterion.numValues()];
 		for(int i=0;i<instances.length;i++) {
 			instances[i] = filterByAttributeValue(data, criterion, new int[] { i + 1 });
+			instances[i] = removeAttribute(instances[i], criterion);
 		}
 
 		return instances;
@@ -72,16 +90,16 @@ public class DecisionTree implements Classifier {
 		}
 		return isHomogeneous;
 	}
-	// Not tested yet
+
 	private Instances removeAttribute(Instances data, Attribute attribute) throws Exception {
 		Remove remove = new Remove();
 
-		remove.setAttributeIndices("" + attribute.index());
+		remove.setAttributeIndices("" + (attribute.index() + 1));
 		remove.setInvertSelection(false);
 		remove.setInputFormat(data);
 		Instances newData = Filter.useFilter(data, remove);
-
 		return newData;
+
 	}
 
 	private Attribute findSplittingCriterion(Instances data) throws Exception {
@@ -89,7 +107,6 @@ public class DecisionTree implements Classifier {
 		double maxGain = 0;
 		for (int i=0;i<data.numAttributes() - 1;i++) {
 			double gain = calcGain(data, i);
-			System.out.println("Gain: " + data.attribute(i).name() + "= " + gain);
 			if(maxGain < gain) {
 				maxIndex = i;
 				maxGain = gain;
@@ -169,15 +186,18 @@ public class DecisionTree implements Classifier {
 	}
 
 	private Instances getNoRecurrenceClass(Instances data) throws Exception {
-		return filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( NO_RECURRENCE + 1 )});
+		int noRecurrenceClassIndex = 2;
+		return filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( noRecurrenceClassIndex )});
 	}
 
 	private Instances getRecurrenceClass(Instances data) throws Exception {
-		return filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( RECURRENCE + 1 )});
+		int recurrenceClassIndex = 1;
+		return filterByAttributeValue(data, data.attribute(data.classIndex()), new int[] {( recurrenceClassIndex )});
 	}
 
 	private double[] getProbabilties(Instances data) throws Exception{
 		double[] probabilities = new double[2];
+		Instances test = getNoRecurrenceClass(data);
 		probabilities[NO_RECURRENCE] = getNoRecurrenceClass(data).size() / (double) data.size();
 		probabilities[RECURRENCE] = getRecurrenceClass(data).size() / (double) data.size();
         return probabilities;
