@@ -26,6 +26,7 @@ public class DecisionTree implements Classifier {
 	@Override
 	public void buildClassifier(Instances data) throws Exception {
 		selectionMethod = SelectionMethod.GINI;
+		buildTree(data);
     }
     public int majorityClass (Instances data) throws Exception
 	{
@@ -44,24 +45,22 @@ public class DecisionTree implements Classifier {
 		// TODO: implemented Find best attribute @ Dor
 		Attribute splittingAttribute = findSplittingCriterion(data);
 		node.attributeIndex = splittingAttribute.index();
+
+		Instances[] splitGroups = splitByCriterion(data, splittingAttribute);
+
 		Instances newData = removeAttribute(data, splittingAttribute);
 
-		Instances recurrenceClass = getRecurrenceClass(data);
-		Instances noRecurrenceClass = getNoRecurrenceClass(data);
+		return node;
 
-		if(recurrenceClass.size() == 0 && noRecurrenceClass.size() != 0) {
-			node.returnValue = 0;
-			return node;
-		}
-		else if (recurrenceClass.size() != 0 && noRecurrenceClass.size() == 0) {
-			node.returnValue = 1;
-			return node;
+	}
+
+	private Instances[] splitByCriterion (Instances data, Attribute criterion) throws Exception {
+		Instances [] instances = new Instances[criterion.numValues()];
+		for(int i=0;i<instances.length;i++) {
+			instances[i] = filterByAttributeValue(data, criterion, new int[] { i + 1 });
 		}
 
-		// TODO: Recursion
-		node.children = new Node[2];
-		node.children[NO_RECURRENCE] = buildTree(noRecurrenceClass);
-		node.children[RECURRENCE] = buildTree(recurrenceClass);
+		return instances;
 	}
 	// Not tested yet
 	private Instances removeAttribute(Instances data, Attribute attribute) throws Exception {
@@ -75,8 +74,19 @@ public class DecisionTree implements Classifier {
 		return newData;
 	}
 
-	private Attribute findSplittingCriterion(Instances data) {
+	private Attribute findSplittingCriterion(Instances data) throws Exception {
+		int maxIndex = 0;
+		double maxGain = 0;
+		for (int i=0;i<data.numAttributes() - 1;i++) {
+			double gain = calcGain(data, i);
+			System.out.println("Gain: " + data.attribute(i).name() + "= " + gain);
+			if(maxGain < gain) {
+				maxIndex = i;
+				maxGain = gain;
+			}
+		}
 
+		return data.attribute(maxIndex);
 	}
     
     @Override
@@ -161,11 +171,6 @@ public class DecisionTree implements Classifier {
 		probabilities[NO_RECURRENCE] = getNoRecurrenceClass(data).size() / (double) data.size();
 		probabilities[RECURRENCE] = getRecurrenceClass(data).size() / (double) data.size();
         return probabilities;
-	}
-
-	// Not test, should be fine
-	private boolean getActual(Instance instance) {
-		return isRecurrence(instance.stringValue(instance.numAttributes() - 1));
 	}
 
 	private String flatArrayValues(int [] array) {
