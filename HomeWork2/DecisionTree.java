@@ -29,9 +29,11 @@ public class DecisionTree implements Classifier {
 	public void buildClassifier(Instances data) throws Exception {
 		selectionMethod = SelectionMethod.GINI;
 		Node rootNode = buildTree(data);
-		System.out.println("hey");
+		//classifyInstance();
+		classifyInstance(data.get(3));
 	}
-    public int majorityClass (Instances data) throws Exception
+
+    private int majorityClass (Instances data) throws Exception
 	{
 		double [] p = getProbabilties(data);
 		return (p[0] > p[1]) ? NO_RECURRENCE : RECURRENCE;
@@ -119,6 +121,9 @@ public class DecisionTree implements Classifier {
     
     @Override
 	public double classifyInstance(Instance instance) {
+		Node curNode = rootNode;
+		instance.attribute(curNode.attributeIndex);
+		System.out.println(instance.attribute(curNode.attributeIndex));
 		return 0.0;
     }
 
@@ -130,7 +135,7 @@ public class DecisionTree implements Classifier {
 	/**
 	 * Calculate Gini Index
 	 * @param p - A set of probabilities
-	 * @return The gini index of p
+	 * @return The Gini index of p
 	 */
     private double calcGini(double[] p) {
 		double sum = 0.0;
