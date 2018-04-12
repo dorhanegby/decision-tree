@@ -29,6 +29,7 @@ public class DecisionTree implements Classifier {
 	public void buildClassifier(Instances data) throws Exception {
 		selectionMethod = SelectionMethod.GINI;
 		Node rootNode = buildTree(data);
+		System.out.println("hey");
 	}
     public int majorityClass (Instances data) throws Exception
 	{
@@ -152,7 +153,7 @@ public class DecisionTree implements Classifier {
 			}
 		}
 
-		return sum;
+		return -sum;
 	}
 
 	private double calcMeasure(Instances data) throws Exception {
