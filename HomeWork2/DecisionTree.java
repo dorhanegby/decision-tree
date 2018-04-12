@@ -29,8 +29,8 @@ public class DecisionTree implements Classifier {
 	public void buildClassifier(Instances data) throws Exception {
 		selectionMethod = SelectionMethod.GINI;
 		this.rootNode = buildTree(data);
-//		Instance test = data.get(3);
-//		classifyInstance(test);
+		Instance test = data.get(3);
+		classifyInstance(test);
 		System.out.println("There is a tree ");
 
 
@@ -55,13 +55,16 @@ public class DecisionTree implements Classifier {
 			node.returnValue = majorityClass(data);
 			return node;
 		}
-
-		Attribute splittingAttribute = findSplittingCriterion(data);
-		node.attributeIndex = splittingAttribute.index();
+		int splittingAttribute = findSplittingCriterion(data);
+		node.attributeIndex = splittingAttribute;
+		//node.attributeIndex = splittingAttribute.index();
 		node.returnValue = majorityClass(data);
-		Instances[] splitGroups = splitByCriterion(data, splittingAttribute);
+		Instances[] splitGroups = splitByCriterion(data, data.attribute(splittingAttribute));
 		node.children = new Node[splitGroups.length];
 		for(int i=0;i<splitGroups.length;i++) {
+			if(i==7){
+				System.out.println("hey");
+			}
 			if(splitGroups[i].size() != 0) {
 				node.children[i] = buildTree(splitGroups[i]);
 				node.children[i].parent = node;
@@ -73,7 +76,7 @@ public class DecisionTree implements Classifier {
 				childnode.returnValue = node.returnValue;
 			}
 		}
-		Instances newData = removeAttribute(data, splittingAttribute);
+		Instances newData = removeAttribute(data, data.attribute(splittingAttribute));
 
 		return node;
 
@@ -108,7 +111,7 @@ public class DecisionTree implements Classifier {
 
 	}
 
-	private Attribute findSplittingCriterion(Instances data) throws Exception {
+	private int findSplittingCriterion(Instances data) throws Exception {
 		int maxIndex = 0;
 		double maxGain = 0;
 		for (int i=0;i<data.numAttributes() - 1;i++) {
@@ -119,7 +122,7 @@ public class DecisionTree implements Classifier {
 			}
 		}
 
-		return data.attribute(maxIndex);
+		return maxIndex;
 	}
     
     @Override
