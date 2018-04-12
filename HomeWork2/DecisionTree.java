@@ -28,9 +28,12 @@ public class DecisionTree implements Classifier {
 	@Override
 	public void buildClassifier(Instances data) throws Exception {
 		selectionMethod = SelectionMethod.GINI;
-		Node rootNode = buildTree(data);
-		//classifyInstance();
-		classifyInstance(data.get(3));
+		this.rootNode = buildTree(data);
+//		Instance test = data.get(3);
+//		classifyInstance(test);
+		System.out.println("There is a tree ");
+
+
 	}
 
     private int majorityClass (Instances data) throws Exception
@@ -121,11 +124,13 @@ public class DecisionTree implements Classifier {
     
     @Override
 	public double classifyInstance(Instance instance) {
-		Node curNode = rootNode;
-		instance.attribute(curNode.attributeIndex);
-		System.out.println(instance.attribute(curNode.attributeIndex));
-		return 0.0;
-    }
+		Node cureNode = rootNode;
+		while (cureNode.children != null) {
+			System.out.println(instance.attribute(cureNode.attributeIndex));
+			cureNode = cureNode.children[instance.attribute(cureNode.attributeIndex).indexOfValue(instance.stringValue(cureNode.attributeIndex))];
+		}
+		return cureNode.returnValue;
+	}
 
 
     private double calcGain(Instances data, int attributeIndex) throws Exception {
