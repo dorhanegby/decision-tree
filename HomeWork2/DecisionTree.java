@@ -31,29 +31,7 @@ public class DecisionTree implements Classifier {
 		selectionMethod = SelectionMethod.GINI;
 		attributeToIndex = createAttributeMapping(data);
 		this.rootNode = buildTree(data);
-		int recurrence = 0;
-		int no_recurrence = 0;
-		for(int i=0;i<data.size();i++){
-			if(classifyInstance(data.get(i)) == 1) {
-				if(data.get(i).classValue() + 1 != 1) {
-					System.out.println("mistake! " + i);
-					System.out.println(data.get(i));
-				}
-				recurrence++;
-			}
-			else {
-				if(data.get(i).classValue() + 1 != 2) {
-					System.out.println("mistake! " + i);
-					System.out.println(data.get(i));
-				}
-				no_recurrence++;
-			}
-
-
-		}
-
-		System.out.println("recurrence: " + recurrence);
-		System.out.println("no recurrence: " + no_recurrence);
+		System.out.println(calcAvgError(data));
 	}
 
 
@@ -113,8 +91,19 @@ public class DecisionTree implements Classifier {
 	 */
 
 	private double calcAvgError(Instances data) {
-		// TODO: Ben
-		return 0;
+		double numOfMistakes = 0.0;
+		for (int i = 0; i < data.size(); i++) {
+			if (classifyInstance(data.get(i)) == 1) {
+				if (data.get(i).classValue() + 1 != 1) {
+					numOfMistakes++;
+				}
+			} else {
+				if (data.get(i).classValue() + 1 != 2) {
+					numOfMistakes++;
+				}
+			}
+		}
+		return numOfMistakes/data.size();
 	}
 
 	private HashMap<Attribute, Integer> createAttributeMapping(Instances data) {
