@@ -5,11 +5,8 @@ import weka.core.*;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.instance.RemoveWithValues;
-import weka.filters.unsupervised.instance.SubsetByExpression;
 
 import java.util.HashMap;
-import java.util.concurrent.Callable;
-import java.util.jar.Attributes;
 
 class Node {
 	Node[] children;
@@ -98,7 +95,7 @@ public class DecisionTree implements Classifier {
 
 	private HashMap<Attribute, Integer> createAttributeMapping(Instances data) {
 		HashMap<Attribute, Integer> hashMap = new HashMap<>();
-		for(int i =0;i<data.numAttributes();i++) {
+		for (int i = 0; i < data.numAttributes(); i++) {
 			hashMap.put(data.attribute(i), i);
 		}
 
@@ -158,7 +155,10 @@ public class DecisionTree implements Classifier {
 	public double classifyInstance(Instance instance) {
 		Node cureNode = rootNode;
 		while (cureNode.children != null) {
-			cureNode = cureNode.children[instance.attribute(cureNode.attributeIndex).indexOfValue(instance.stringValue(cureNode.attributeIndex))];
+			Attribute attribute = instance.attribute(cureNode.attributeIndex);
+			String instanceValueOfAttribute = instance.stringValue(cureNode.attributeIndex);
+			int indexOfNodeByAttribute = attribute.indexOfValue(instanceValueOfAttribute);
+			cureNode = cureNode.children[indexOfNodeByAttribute];
 		}
 		return cureNode.returnValue;
 	}
