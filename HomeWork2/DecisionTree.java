@@ -17,6 +17,7 @@ class Node {
 	int recurrence;
 	int noRecurrence;
 	Instances data;
+	String attType;
 }
 
 public class DecisionTree implements Classifier {
@@ -29,11 +30,9 @@ public class DecisionTree implements Classifier {
 	public void buildClassifier(Instances data) throws Exception {
 		selectionMethod = SelectionMethod.GINI;
 		this.rootNode = buildTree(data);
-		Instance test = data.get(3);
-		classifyInstance(test);
+//		Instance test = data.get(3);
+//		classifyInstance(test);
 		System.out.println("There is a tree ");
-
-
 	}
 
     private int majorityClass (Instances data) throws Exception
@@ -62,18 +61,17 @@ public class DecisionTree implements Classifier {
 		Instances[] splitGroups = splitByCriterion(data, data.attribute(splittingAttribute));
 		node.children = new Node[splitGroups.length];
 		for(int i=0;i<splitGroups.length;i++) {
-			if(i==7){
-				System.out.println("hey");
-			}
 			if(splitGroups[i].size() != 0) {
 				node.children[i] = buildTree(splitGroups[i]);
 				node.children[i].parent = node;
+				node.children[i].attType = data.attribute(node.children[i].parent.attributeIndex).value(i);
 			}
 			else {
 				Node childnode = new Node();
 				node.children[i] = childnode;
 				childnode.parent = node;
 				childnode.returnValue = node.returnValue;
+				childnode.attType = data.attribute(childnode.parent.attributeIndex).value(i);
 			}
 		}
 		Instances newData = removeAttribute(data, data.attribute(splittingAttribute));
