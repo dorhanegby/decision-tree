@@ -7,7 +7,9 @@ import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.instance.RemoveWithValues;
 import weka.filters.unsupervised.instance.SubsetByExpression;
 
+import java.util.HashMap;
 import java.util.concurrent.Callable;
+import java.util.jar.Attributes;
 
 class Node {
 	Node[] children;
@@ -25,21 +27,37 @@ public class DecisionTree implements Classifier {
     private final int RECURRENCE = 1;
 	private Node rootNode;
 	private SelectionMethod selectionMethod;
-
+	private HashMap<Attribute, Integer> attributeToIndex;
 	@Override
 	public void buildClassifier(Instances data) throws Exception {
 		selectionMethod = SelectionMethod.GINI;
+		attributeToIndex = createAttributeMapping(data);
 		this.rootNode = buildTree(data);
-//		Instance test = data.get(3);
-//		classifyInstance(test);
-		System.out.println("There is a tree ");
+		int recurrence = 0;
+		int no_recurrence = 0;
+		for(int i=0;i<data.size();i++){
+			if(classifyInstance(data.get(i)) == 1) {
+				if(data.get(i).classValue() + 1 != 1) {
+					System.out.println("mistake! " + i);
+					System.out.println(data.get(i));
+				}
+				recurrence++;
+			}
+			else {
+				if(data.get(i).classValue() + 1 != 2) {
+					System.out.println("mistake! " + i);
+					System.out.println(data.get(i));
+				}
+				no_recurrence++;
+			}
+
+
+		}
+
+		System.out.println("recurrence: " + recurrence);
+		System.out.println("no recurrence: " + no_recurrence);
 	}
 
-    private int majorityClass (Instances data) throws Exception
-	{
-		double [] p = getProbabilties(data);
-		return (p[0] > p[1]) ? NO_RECURRENCE : RECURRENCE;
-    }
 
     private Node buildTree(Instances data) throws Exception {
 		Node node = new Node();
@@ -54,30 +72,43 @@ public class DecisionTree implements Classifier {
 			node.returnValue = majorityClass(data);
 			return node;
 		}
-		int splittingAttribute = findSplittingCriterion(data);
-		node.attributeIndex = splittingAttribute;
-		//node.attributeIndex = splittingAttribute.index();
+		Attribute splittingAttribute = findSplittingCriterion(data);
+		node.attributeIndex = attributeToIndex.get(splittingAttribute);
 		node.returnValue = majorityClass(data);
-		Instances[] splitGroups = splitByCriterion(data, data.attribute(splittingAttribute));
+		Instances[] splitGroups = splitByCriterion(data, splittingAttribute);
 		node.children = new Node[splitGroups.length];
 		for(int i=0;i<splitGroups.length;i++) {
 			if(splitGroups[i].size() != 0) {
 				node.children[i] = buildTree(splitGroups[i]);
 				node.children[i].parent = node;
-				node.children[i].attType = data.attribute(node.children[i].parent.attributeIndex).value(i);
+				node.children[i].attType = splittingAttribute.value(i);
 			}
 			else {
 				Node childnode = new Node();
 				node.children[i] = childnode;
 				childnode.parent = node;
 				childnode.returnValue = node.returnValue;
-				childnode.attType = data.attribute(childnode.parent.attributeIndex).value(i);
+				childnode.attType = splittingAttribute.value(i);
 			}
 		}
-		Instances newData = removeAttribute(data, data.attribute(splittingAttribute));
 
 		return node;
 
+	}
+
+	private HashMap<Attribute, Integer> createAttributeMapping(Instances data) {
+		HashMap<Attribute, Integer> hashMap = new HashMap<>();
+		for(int i =0;i<data.numAttributes();i++) {
+			hashMap.put(data.attribute(i), i);
+		}
+
+		return hashMap;
+	}
+
+	private int majorityClass (Instances data) throws Exception
+	{
+		double [] p = getProbabilties(data);
+		return (p[0] > p[1]) ? NO_RECURRENCE : RECURRENCE;
 	}
 
 	private Instances[] splitByCriterion (Instances data, Attribute criterion) throws Exception {
@@ -109,7 +140,7 @@ public class DecisionTree implements Classifier {
 
 	}
 
-	private int findSplittingCriterion(Instances data) throws Exception {
+	private Attribute findSplittingCriterion(Instances data) throws Exception {
 		int maxIndex = 0;
 		double maxGain = 0;
 		for (int i=0;i<data.numAttributes() - 1;i++) {
@@ -120,14 +151,13 @@ public class DecisionTree implements Classifier {
 			}
 		}
 
-		return maxIndex;
+		return data.attribute(maxIndex);
 	}
     
     @Override
 	public double classifyInstance(Instance instance) {
 		Node cureNode = rootNode;
 		while (cureNode.children != null) {
-			System.out.println(instance.attribute(cureNode.attributeIndex));
 			cureNode = cureNode.children[instance.attribute(cureNode.attributeIndex).indexOfValue(instance.stringValue(cureNode.attributeIndex))];
 		}
 		return cureNode.returnValue;
