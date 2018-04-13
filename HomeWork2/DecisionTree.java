@@ -25,6 +25,7 @@ public class DecisionTree implements Classifier {
 	private Node rootNode;
 	private SelectionMethod selectionMethod;
 	private HashMap<Attribute, Integer> attributeToIndex;
+
 	@Override
 	public void buildClassifier(Instances data) throws Exception {
 		selectionMethod = SelectionMethod.GINI;
@@ -93,6 +94,29 @@ public class DecisionTree implements Classifier {
 
 	}
 
+	/**
+	 *
+	 * Calculates the chi square statistic of splitting
+	 * the data according to the splitting attribute as learned in class.
+	 *
+	 */
+
+	private double calcChiSquare(Instances data) {
+		return 0;
+	}
+
+	/**
+	 * Calculate the average error on a given instances set (could be the training, test or validation set).
+	 * The average error is the total number of classification mistakes on the input instances set divided by the number of instances in the input set.
+	 * @param data
+	 * @return Average error (double).
+	 */
+
+	private double calcAvgError(Instances data) {
+		// TODO: Ben
+		return 0;
+	}
+
 	private HashMap<Attribute, Integer> createAttributeMapping(Instances data) {
 		HashMap<Attribute, Integer> hashMap = new HashMap<>();
 		for (int i = 0; i < data.numAttributes(); i++) {
@@ -150,17 +174,20 @@ public class DecisionTree implements Classifier {
 
 		return data.attribute(maxIndex);
 	}
-    
-    @Override
+
+	public Node getRootNode() {
+		return this.rootNode;
+	}
+
 	public double classifyInstance(Instance instance) {
-		Node cureNode = rootNode;
-		while (cureNode.children != null) {
-			Attribute attribute = instance.attribute(cureNode.attributeIndex);
-			String instanceValueOfAttribute = instance.stringValue(cureNode.attributeIndex);
+		Node traverseNode = getRootNode();
+		while (traverseNode.children != null) {
+			Attribute attribute = instance.attribute(traverseNode.attributeIndex);
+			String instanceValueOfAttribute = instance.stringValue(traverseNode.attributeIndex);
 			int indexOfNodeByAttribute = attribute.indexOfValue(instanceValueOfAttribute);
-			cureNode = cureNode.children[indexOfNodeByAttribute];
+			traverseNode = traverseNode.children[indexOfNodeByAttribute];
 		}
-		return cureNode.returnValue;
+		return traverseNode.returnValue;
 	}
 
 
