@@ -79,8 +79,30 @@ public class DecisionTree implements Classifier {
 	 *
 	 */
 
-	private double calcChiSquare(Instances data) {
-		return 0;
+	private double calcChiSquare(Instances data,Attribute splitingAttribute)  throws Exception {
+		int recurrence = getRecurrenceClass(data).size();
+		int noRecurrence = getNoRecurrenceClass(data).size();
+		double numOfInstances = (double) data.size();
+		double recProb = recurrence / numOfInstances;
+		double noRecProb = noRecurrence / numOfInstances;
+		Instances[] splitDataByAttribute = splitByCriterion(data, splitingAttribute);
+		double chiSquare = 0;
+		for (int i = 0; i < splitingAttribute.numValues(); i++) {
+			int	numOfDataFeature = splitDataByAttribute[i].size();
+			double	noRecExpect = numOfDataFeature * noRecProb;
+			double	recExpect = numOfDataFeature * recProb;
+			int numOfRec = getRecurrenceClass(splitDataByAttribute[i]).size();
+			int numOfNoRec = getNoRecurrenceClass(splitDataByAttribute[i]).size();
+			chiSquare += chiSquareTestFormula(numOfRec, recExpect) + chiSquareTestFormula(numOfNoRec, noRecExpect);
+		}
+		return chiSquare;
+	}
+
+	private double chiSquareTestFormula(int observed , double expected){
+		if( expected == 0 ){
+			return 0;
+		}
+		return Math.pow(observed - expected, 2) / expected;
 	}
 
 	/**
