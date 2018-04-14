@@ -37,20 +37,29 @@ public class DecisionTree implements Classifier {
 	private final int ALPHA_025 = 2;
 	private final int ALPHA_005 = 3;
 	private final int ALPHA_0005 = 4;
+
 	private Node rootNode;
-	private SelectionMethod selectionMethod;
+	private SelectionMethod selectionMethod = SelectionMethod.GINI;
 	private HashMap<Attribute, Integer> attributeToIndex;
 	double[][] chiSquareTable;
 	private TreeStats treeStats;
 
+	private double pValue = 1;
+
+	public void setpValue(double pValue) {
+		this.pValue = pValue;
+	}
+
+	public void setSelectionMethod(SelectionMethod selectionMethod) {
+		this.selectionMethod = selectionMethod;
+	}
+
 	@Override
 	public void buildClassifier(Instances data) throws Exception {
 		chiSquareTable = initChiSquareTable();
-		selectionMethod = SelectionMethod.GINI;
 		attributeToIndex = createAttributeMapping(data);
 		this.rootNode = buildTree(data);
 		this.treeStats = calcTreeStats(data);
-		System.out.println(calcAvgError(data));
 	}
 
 
@@ -68,27 +77,50 @@ public class DecisionTree implements Classifier {
 			return node;
 		}
 		Attribute splittingAttribute = findSplittingCriterion(data);
+		if(splittingAttribute == null) {
+			// 0 gain
+			node.children = null;
+			return node;
+		}
 		node.attributeIndex = attributeToIndex.get(splittingAttribute);
 		node.returnValue = majorityClass(data);
 		Instances[] splitGroups = splitByCriterion(data, splittingAttribute);
-		node.children = new Node[splitGroups.length];
-		for(int i=0;i<splitGroups.length;i++) {
-			if(splitGroups[i].size() != 0) {
-				node.children[i] = buildTree(splitGroups[i]);
-				node.children[i].parent = node;
-				node.children[i].attType = splittingAttribute.value(i);
+		int numOfNonEmptyGroups = getNonEmptyGroups(splitGroups);
+		int numOfAttributesToDF = numOfNonEmptyGroups - 2;
+		if(pValue == 1 || calcChiSquare(data, splittingAttribute) > chiSquareTable[numOfAttributesToDF][getIndexByAlpha(pValue)]) {
+			node.children = new Node[splitGroups.length];
+			for(int i=0;i<splitGroups.length;i++) {
+				if(splitGroups[i].size() != 0) {
+					node.children[i] = buildTree(splitGroups[i]);
+					node.children[i].parent = node;
+					node.children[i].attType = splittingAttribute.value(i);
+				}
+				else {
+					Node childnode = new Node();
+					node.children[i] = childnode;
+					childnode.parent = node;
+					childnode.returnValue = node.returnValue;
+					childnode.attType = splittingAttribute.value(i);
+				}
 			}
-			else {
-				Node childnode = new Node();
-				node.children[i] = childnode;
-				childnode.parent = node;
-				childnode.returnValue = node.returnValue;
-				childnode.attType = splittingAttribute.value(i);
-			}
+		}
+		else {
+			node.children = null; // the node is a leaf.
 		}
 
 		return node;
 
+	}
+
+	private int getNonEmptyGroups(Instances[] splitGroups) {
+		int counter = 0;
+		for(int i=0;i<splitGroups.length;i++) {
+			if(splitGroups[i].size() > 0) {
+				counter++;
+			}
+		}
+
+		return counter;
 	}
 
 	/**
@@ -98,7 +130,7 @@ public class DecisionTree implements Classifier {
 	 *
 	 */
 
-	private double calcChiSquare(Instances data,Attribute splitingAttribute)  throws Exception {
+	private double calcChiSquare(Instances data, Attribute splitingAttribute)  throws Exception {
 		int recurrence = getRecurrenceClass(data).size();
 		int noRecurrence = getNoRecurrenceClass(data).size();
 		double numOfInstances = (double) data.size();
@@ -131,7 +163,7 @@ public class DecisionTree implements Classifier {
 	 * @return Average error (double).
 	 */
 
-	private double calcAvgError(Instances data) {
+	public double calcAvgError(Instances data) {
 		double numOfMistakes = 0.0;
 		for (int i = 0; i < data.size(); i++) {
 			if (classifyInstance(data.get(i)) == 1) {
@@ -202,6 +234,10 @@ public class DecisionTree implements Classifier {
 			}
 		}
 
+		if(maxGain == 0) {
+			return null;
+		}
+
 		return data.attribute(maxIndex);
 	}
 
@@ -209,15 +245,15 @@ public class DecisionTree implements Classifier {
 		return this.rootNode;
 	}
 
-	private double getTreeAvgHeight()  {
+	public double getTreeAvgHeight()  {
 		return this.treeStats.avgHeight;
 	}
 
-	private int getTreeMaxHeight() {
+	public int getTreeMaxHeight() {
 		return this.treeStats.maxHeight;
 	}
 
-	private TreeStats calcTreeStats(Instances data) {
+	public TreeStats calcTreeStats(Instances data) {
 		double sum = 0;
 		int maxHeight = 0;
 		int numOfInstances = data.size();
@@ -386,7 +422,7 @@ public class DecisionTree implements Classifier {
 		return chiSquareTable;
 
 	}
-	
+
 	private int getIndexByAlpha(double alpha) {
 		if (alpha == 0.75) {
 			return ALPHA_075;
@@ -424,7 +460,7 @@ public class DecisionTree implements Classifier {
 		return null;
 	}
 
-	private enum SelectionMethod {
+	public enum SelectionMethod {
 		GINI,
 		ENTROPY
 	}

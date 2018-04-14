@@ -40,9 +40,75 @@ public class MainHW2 {
 		Instances testingCancer = loadData("HomeWork2/Data/cancer_test.txt");
 		Instances validationCancer = loadData("HomeWork2/Data/cancer_validation.txt");
 
+		// Comparing between Entropy and Gini
 		DecisionTree decisionTree = new DecisionTree();
+		decisionTree.setSelectionMethod(DecisionTree.SelectionMethod.ENTROPY);
 		decisionTree.buildClassifier(trainingCancer);
+		double validErrorEntropy = decisionTree.calcAvgError(validationCancer);
+		System.out.println("Validation error using Entropy: " + validErrorEntropy);
 
-        //TODO: complete the Main method
+		decisionTree.setSelectionMethod(DecisionTree.SelectionMethod.GINI);
+		decisionTree.buildClassifier(trainingCancer);
+		double validErrorGini = decisionTree.calcAvgError(validationCancer);
+		System.out.println("Validation error using Gini: " + validErrorGini);
+
+		if (validErrorGini < validErrorEntropy) {
+			decisionTree.setSelectionMethod(DecisionTree.SelectionMethod.GINI);
+		} else {
+			decisionTree.setSelectionMethod(DecisionTree.SelectionMethod.ENTROPY);
+		}
+
+		System.out.println("----------------------------------------------------");
+		double pValueAlpha = 1.0;
+		double minPValue = pValueTest(decisionTree, trainingCancer, validationCancer, 1.0);
+		double tempPValue = pValueTest(decisionTree, trainingCancer, validationCancer, 0.75);
+		if(minPValue > tempPValue) {
+			minPValue = tempPValue;
+			pValueAlpha = 0.75;
+		}
+		tempPValue = pValueTest(decisionTree, trainingCancer, validationCancer, 0.5);
+		if(minPValue > tempPValue) {
+			minPValue = tempPValue;
+			pValueAlpha = 0.5;
+		}
+		tempPValue = pValueTest(decisionTree, trainingCancer, validationCancer, 0.25);
+		if(minPValue > tempPValue) {
+			minPValue = tempPValue;
+			pValueAlpha = 0.25;
+		}
+		tempPValue = pValueTest(decisionTree, trainingCancer, validationCancer, 0.05);
+		if(minPValue > tempPValue) {
+			minPValue = tempPValue;
+			pValueAlpha = 0.05;
+		}
+		tempPValue = pValueTest(decisionTree, trainingCancer, validationCancer, 0.005);
+		if(minPValue > tempPValue) {
+			minPValue = tempPValue;
+			pValueAlpha = 0.005;
+		}
+
+		System.out.println("Best validation error at p_value = " + pValueAlpha);
+		decisionTree.setpValue(pValueAlpha);
+		System.out.println("Test error with best tree: " + decisionTree.calcAvgError(testingCancer));
+
+		// TODO: representation of the tree
+
+	}
+
+		private static double pValueTest(DecisionTree decisionTree, Instances training, Instances validation, double pValue) throws Exception {
+		System.out.println("Decision Tree with p_value of: " + pValue);
+		decisionTree.setpValue(pValue);
+		decisionTree.buildClassifier(training);
+		System.out.println("The training error of the decision tree is " + decisionTree.calcAvgError(training));
+		decisionTree.calcTreeStats(validation);
+		System.out.println("Max height on validation data: " + decisionTree.getTreeMaxHeight());
+		System.out.println("Average height on validation data: " + decisionTree.getTreeAvgHeight());
+
+		double validError = decisionTree.calcAvgError(validation);
+
+		System.out.println("The validation error of the decision tree is " + validError);
+		System.out.println("----------------------------------------------------");
+
+		return validError;
 	}
 }
