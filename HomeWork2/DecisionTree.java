@@ -22,12 +22,19 @@ class Node {
 public class DecisionTree implements Classifier {
     private final int NO_RECURRENCE = 0;
     private final int RECURRENCE = 1;
+    private final int ALPHA_075 = 0;
+	private final int ALPHA_05= 1;
+	private final int ALPHA_025 = 2;
+	private final int ALPHA_005 = 3;
+	private final int ALPHA_0005 = 4;
 	private Node rootNode;
 	private SelectionMethod selectionMethod;
 	private HashMap<Attribute, Integer> attributeToIndex;
+	double[][] chiSquareTable;
 
 	@Override
 	public void buildClassifier(Instances data) throws Exception {
+		chiSquareTable = initChiSquareTable();
 		selectionMethod = SelectionMethod.GINI;
 		attributeToIndex = createAttributeMapping(data);
 		this.rootNode = buildTree(data);
@@ -307,6 +314,58 @@ public class DecisionTree implements Classifier {
 		filter.setInputFormat(dataToFilter);
 		Instances newData = Filter.useFilter(dataToFilter, filter);
 		return newData;
+	}
+
+	private double[][] initChiSquareTable() {
+		double[][] chiSquareTable = new double[12][5];
+		chiSquareTable[0] =  new double []{ 0.102, 0.455, 1.323, 3.841, 7.879 };
+		chiSquareTable[1] = new double []{ 0.575, 1.386, 2.773, 5.991, 10.597 };
+		chiSquareTable[2] = new double []{ 1.213, 2.366, 4.108, 7.815, 12.838 };
+		chiSquareTable[3] = new double []{ 1.923, 3.357, 5.385, 9.488, 14.860 };
+		chiSquareTable[4] = new double []{ 2.675, 4.351, 6.626, 11.070, 16.750 };
+		chiSquareTable[5] = new double []{ 3.455, 5.348, 7.841, 12.592, 18.548 };
+		chiSquareTable[6] = new double []{ 4.255, 6.346, 9.037, 14.067, 20.278 };
+		chiSquareTable[7] = new double []{ 5.071, 7.344, 10.219, 15.507, 21.955 };
+		chiSquareTable[8] = new double []{ 5.899, 8.343, 11.389, 16.919, 23.589 };
+		chiSquareTable[9] = new double []{ 6.737, 9.342, 12.549, 18.307, 25.188 };
+		chiSquareTable[10] = new double []{ 7.584, 10.341, 13.701, 19.675, 26.757 };
+		chiSquareTable[11] = new double []{ 8.438, 11.340, 14.845, 21.026, 28.300 };
+
+		return chiSquareTable;
+
+	}
+	/*
+	    private final int ALPHA_075 = 0;
+	private final int ALPHA_05= 1;
+	private final int ALPHA_025 = 2;
+	private final int ALPHA_005 = 3;
+	private final int ALPHA_0005 = 4;
+
+
+	 */
+	private int getIndexByAlpha(double alpha) {
+		if(alpha == 0.75) {
+			return ALPHA_05;
+		}else if(alpha == 0.5) {
+			return ALPHA_025;
+		}else if(alpha == 0.25) {
+			return ALPHA_005;
+		}else if(alpha == 0.05) {
+			return ALPHA_005;
+		}else if(alpha == 0.005) {
+			return ALPHA_0005;
+		}
+
+		return -1;
+	}
+
+	private double chiSquareTableValue(int degreeOfFreedom, double alpha) {
+		if(alpha == -1) {
+			System.out.println("Alpha value invalid");
+			return -1;
+		}
+
+		return chiSquareTable[degreeOfFreedom - 1][getIndexByAlpha(alpha)];
 	}
 
     @Override
