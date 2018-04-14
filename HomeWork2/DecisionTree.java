@@ -41,10 +41,50 @@ public class DecisionTree implements Classifier {
 	private Node rootNode;
 	private SelectionMethod selectionMethod = SelectionMethod.GINI;
 	private HashMap<Attribute, Integer> attributeToIndex;
+	private HashMap<Integer, String> indexToAttributeName;
 	double[][] chiSquareTable;
 	private TreeStats treeStats;
 
 	private double pValue = 1;
+
+	public void printTree() {
+		Node root = getRootNode();
+		System.out.println("Root");
+		printTree(root, 0);
+	}
+
+	private void addTabs(int tabs) {
+		for(int i=0;i<tabs;i++) {
+			System.out.print("  ");
+		}
+	}
+
+	private void printTree(Node node, int recursionDepth) {
+		addTabs(recursionDepth);
+		if(node.children != null) {
+			if(node.returnValue == RECURRENCE) {
+				System.out.println("Returning value: recurrence-events");
+
+			}
+			else {
+				System.out.println("Returning value: no-recurrence-events");
+			}
+
+			for(int i=0;i<node.children.length;i++) {
+				addTabs(recursionDepth);
+				System.out.println("if attribute " + indexToAttributeName.get(node.attributeIndex) + " = " + node.children[i].attType);
+				printTree(node.children[i], recursionDepth  + 1);
+			}
+		}
+		addTabs(recursionDepth);
+		if(node.returnValue == RECURRENCE) {
+			System.out.println("Leaf. Returning value: recurrence-events");
+
+		}
+		else {
+			System.out.println("Leaf. Returning value: no-recurrence-events");
+		}
+	}
 
 	public void setpValue(double pValue) {
 		this.pValue = pValue;
@@ -58,6 +98,7 @@ public class DecisionTree implements Classifier {
 	public void buildClassifier(Instances data) throws Exception {
 		chiSquareTable = initChiSquareTable();
 		attributeToIndex = createAttributeMapping(data);
+		indexToAttributeName = createIndexMapping(data);
 		this.rootNode = buildTree(data);
 		this.treeStats = calcTreeStats(data);
 	}
@@ -183,6 +224,15 @@ public class DecisionTree implements Classifier {
 		HashMap<Attribute, Integer> hashMap = new HashMap<>();
 		for (int i = 0; i < data.numAttributes(); i++) {
 			hashMap.put(data.attribute(i), i);
+		}
+
+		return hashMap;
+	}
+
+	private HashMap<Integer, String> createIndexMapping(Instances data) {
+		HashMap<Integer, String> hashMap = new HashMap<>();
+		for (int i = 0; i < data.numAttributes(); i++) {
+			hashMap.put(i, data.attribute(i).name());
 		}
 
 		return hashMap;

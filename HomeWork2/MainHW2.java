@@ -89,9 +89,10 @@ public class MainHW2 {
 
 		System.out.println("Best validation error at p_value = " + pValueAlpha);
 		decisionTree.setpValue(pValueAlpha);
+		decisionTree.buildClassifier(trainingCancer);
 		System.out.println("Test error with best tree: " + decisionTree.calcAvgError(testingCancer));
 
-		// TODO: representation of the tree
+		decisionTree.printTree();
 
 	}
 
@@ -111,4 +112,5 @@ public class MainHW2 {
 
 		return validError;
 	}
+
 }
