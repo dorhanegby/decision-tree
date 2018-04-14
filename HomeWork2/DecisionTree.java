@@ -8,6 +8,16 @@ import weka.filters.unsupervised.instance.RemoveWithValues;
 
 import java.util.HashMap;
 
+class TreeStats {
+	int maxHeight;
+	double avgHeight;
+
+	public TreeStats(int maxHeight, double avgHeight) {
+		this.maxHeight = maxHeight;
+		this.avgHeight = avgHeight;
+	}
+}
+
 class Node {
 	Node[] children;
 	Node parent;
@@ -31,6 +41,7 @@ public class DecisionTree implements Classifier {
 	private SelectionMethod selectionMethod;
 	private HashMap<Attribute, Integer> attributeToIndex;
 	double[][] chiSquareTable;
+	private TreeStats treeStats;
 
 	@Override
 	public void buildClassifier(Instances data) throws Exception {
@@ -38,6 +49,7 @@ public class DecisionTree implements Classifier {
 		selectionMethod = SelectionMethod.GINI;
 		attributeToIndex = createAttributeMapping(data);
 		this.rootNode = buildTree(data);
+		this.treeStats = calcTreeStats(data);
 		System.out.println(calcAvgError(data));
 	}
 
@@ -197,13 +209,53 @@ public class DecisionTree implements Classifier {
 		return this.rootNode;
 	}
 
+	private double getTreeAvgHeight()  {
+		return this.treeStats.avgHeight;
+	}
+
+	private int getTreeMaxHeight() {
+		return this.treeStats.maxHeight;
+	}
+
+	private TreeStats calcTreeStats(Instances data) {
+		double sum = 0;
+		int maxHeight = 0;
+		int numOfInstances = data.size();
+
+		for (int i = 0; i < numOfInstances; i++) {
+			int height = heightOfInstanceClassification(data.get(i));
+			if(height > maxHeight) {
+				maxHeight = height;
+			}
+			sum += height;
+		}
+
+		return new TreeStats(maxHeight, sum / (double) numOfInstances);
+	}
+
+	private int heightOfInstanceClassification(Instance instance) {
+		Node traverseNode = getRootNode();
+		int height = 0;
+		while (traverseNode.children != null) {
+			traverseNode = findNextNode(instance, traverseNode);
+			height++;
+		}
+
+		return height;
+	}
+
+	private Node findNextNode(Instance instance, Node currectNode) {
+		Attribute attribute = instance.attribute(currectNode.attributeIndex);
+		String instanceValueOfAttribute = instance.stringValue(currectNode.attributeIndex);
+		int indexOfNodeByAttribute = attribute.indexOfValue(instanceValueOfAttribute);
+
+		return currectNode.children[indexOfNodeByAttribute];
+	}
+
 	public double classifyInstance(Instance instance) {
 		Node traverseNode = getRootNode();
 		while (traverseNode.children != null) {
-			Attribute attribute = instance.attribute(traverseNode.attributeIndex);
-			String instanceValueOfAttribute = instance.stringValue(traverseNode.attributeIndex);
-			int indexOfNodeByAttribute = attribute.indexOfValue(instanceValueOfAttribute);
-			traverseNode = traverseNode.children[indexOfNodeByAttribute];
+			traverseNode = findNextNode(instance, traverseNode);
 		}
 		return traverseNode.returnValue;
 	}
@@ -334,25 +386,17 @@ public class DecisionTree implements Classifier {
 		return chiSquareTable;
 
 	}
-	/*
-	    private final int ALPHA_075 = 0;
-	private final int ALPHA_05= 1;
-	private final int ALPHA_025 = 2;
-	private final int ALPHA_005 = 3;
-	private final int ALPHA_0005 = 4;
-
-
-	 */
+	
 	private int getIndexByAlpha(double alpha) {
-		if(alpha == 0.75) {
+		if (alpha == 0.75) {
+			return ALPHA_075;
+		} else if (alpha == 0.5) {
 			return ALPHA_05;
-		}else if(alpha == 0.5) {
+		} else if (alpha == 0.25) {
 			return ALPHA_025;
-		}else if(alpha == 0.25) {
+		} else if (alpha == 0.05) {
 			return ALPHA_005;
-		}else if(alpha == 0.05) {
-			return ALPHA_005;
-		}else if(alpha == 0.005) {
+		} else if (alpha == 0.005) {
 			return ALPHA_0005;
 		}
 
