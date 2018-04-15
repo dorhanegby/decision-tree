@@ -25,7 +25,6 @@ class Node {
 	double returnValue; // majority
 	int recurrence;
 	int noRecurrence;
-	Instances data;
 	String attType;
 }
 
@@ -108,7 +107,6 @@ public class DecisionTree implements Classifier {
 		Node node = new Node();
 		node.recurrence = getRecurrenceClass(data).size();
 		node.noRecurrence = getNoRecurrenceClass(data).size();
-		node.data = data;
 		if(isTheSameClass(data)){
 			node.returnValue = majorityClass(data);
 			return node;
